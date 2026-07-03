@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Busy Mom Budget Planner — HerPurposefullLife</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#231A22; --wine:#5B2333; --gold:#C89B3C;
+    --sage:#7C8B6F; --clay:#B4574A; --parchment:#F4EDE4;
+    --line: rgba(35,26,34,0.14);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--parchment); color:var(--ink); font-family:'Work Sans', sans-serif; padding-bottom:60px;}
+  h1,h2,h3{font-family:'Fraunces', serif; font-weight:600;}
+  .wrap{max-width:480px; margin:0 auto; padding:28px 16px;}
+
+  .intro{text-align:center; margin-bottom:22px;}
+  .intro .eyebrow{font-size:12px; text-transform:uppercase; letter-spacing:0.14em; color:var(--wine); font-weight:600; margin-bottom:8px;}
+  .intro h1{font-size:24px;}
+  .intro p{font-size:13px; color:rgba(35,26,34,0.6); margin-top:6px;}
+
+  .app-mock{
+    background:#fff; border-radius:20px; border:1px solid var(--line);
+    box-shadow: 0 12px 30px rgba(35,26,34,0.10);
+    overflow:hidden;
+  }
+  .app-header{
+    background:var(--wine); color:var(--parchment); padding:20px 22px 24px;
+    display:flex; justify-content:space-between; align-items:flex-start;
+  }
+  .app-header .brand{font-family:'Fraunces', serif; font-style:italic; font-size:13px; opacity:0.85; margin-bottom:4px;}
+  .app-header h2{font-size:19px; color:#fff;}
+  .currency-select{
+    background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3);
+    color:#fff; border-radius:8px; padding:6px 8px; font-size:12px; font-family:'Work Sans';
+  }
+  .currency-select option{color:#000;}
+
+  .toggle{
+    display:flex; margin:-16px 22px 0; background:#fff; border-radius:10px;
+    border:1px solid var(--line); overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,0.08);
+  }
+  .toggle button{
+    flex:1; padding:10px; border:none; background:transparent; font-family:'Work Sans'; font-weight:600;
+    font-size:13px; color:var(--ink); cursor:pointer;
+  }
+  .toggle button.active{background:var(--gold); color:var(--ink);}
+
+  .summary-cards{display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:22px 22px 6px;}
+  .s-card{border-radius:12px; padding:12px 10px; text-align:left;}
+  .s-card.income{background:rgba(124,139,111,0.14);}
+  .s-card.expense{background:rgba(180,87,74,0.12);}
+  .s-card.savings{background:rgba(200,155,60,0.16);}
+  .s-card.balance{background:rgba(35,26,34,0.08);}
+  .s-card .label{font-size:10px; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; opacity:0.7;}
+  .s-card .amt{font-family:'Fraunces', serif; font-weight:600; font-size:16px; margin-top:4px;}
+  .s-card.income .amt{color:var(--sage);}
+  .s-card.expense .amt{color:var(--clay);}
+  .s-card.savings .amt{color:var(--gold);}
+  .s-card.balance .amt{color:var(--wine);}
+
+  .section{padding:14px 22px;}
+  .section h3{font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color:rgba(35,26,34,0.5); margin-bottom:10px; font-family:'Work Sans'; font-weight:700;}
+
+  .row{
+    display:flex; gap:8px; align-items:center; padding:8px 0; border-bottom:1px dashed var(--line);
+  }
+  .row:last-child{border-bottom:none;}
+  .row input[type=text]{flex:1.3; min-width:0;}
+  .row input[type=number]{flex:0.8; min-width:0;}
+  .row select{flex:1.3; min-width:0;}
+  .row input, .row select{
+    padding:8px 10px; border-radius:7px; border:1px solid var(--line); font-size:13px; font-family:'Work Sans';
+    background:#fff; color:var(--ink);
+  }
+  .row .remove{
+    background:none; border:none; color:var(--clay); font-size:16px; cursor:pointer; padding:0 4px; flex:0 0 auto;
+  }
+  .dot{width:8px; height:8px; border-radius:50%; flex:0 0 auto;}
+  .dot.income{background:var(--sage);}
+  .dot.expense{background:var(--clay);}
+  .dot.savings{background:var(--gold);}
+
+  .add-btn{
+    margin-top:8px; width:100%; padding:9px; border-radius:7px; border:1.5px dashed var(--wine);
+    background:transparent; color:var(--wine); font-weight:600; font-size:13px; cursor:pointer; font-family:'Work Sans';
+  }
+  .add-btn:hover{background:rgba(91,35,51,0.06);}
+
+  .detail{padding:14px 22px 6px;}
+  .detail h3{font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color:rgba(35,26,34,0.5); margin-bottom:10px; font-family:'Work Sans'; font-weight:700;}
+  .ledger-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:9px 0; border-bottom:1px dashed var(--line); font-size:13px;
+  }
+  .ledger-row:last-child{border-bottom:none;}
+  .ledger-row .cat{display:flex; align-items:center; gap:8px;}
+  .empty-note{font-size:12px; color:rgba(35,26,34,0.4); padding:8px 0; text-align:center;}
+
+  .download-btn{
+    margin:16px 22px 22px; padding:14px; text-align:center; background:var(--ink);
+    color:var(--parchment); border-radius:10px; font-weight:600; font-size:14px; cursor:pointer; border:none; width:calc(100% - 44px);
+    font-family:'Work Sans';
+  }
+  .download-btn:hover{opacity:0.9;}
+  .download-btn:disabled{opacity:0.5; cursor:default;}
+
+  .reset-btn{
+    display:block; margin:0 22px 22px; background:none; border:none;
+    color:rgba(35,26,34,0.45); font-size:12px; text-decoration:underline;
+    cursor:pointer; font-family:'Work Sans';
+  }
+
+  .footer-note{text-align:center; font-size:11px; color:rgba(35,26,34,0.45); margin-top:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="intro">
+    <div class="eyebrow">HerPurposefullLife</div>
+    <h1>Busy Mom Budget Planner</h1>
+    <p>Add your income and expenses below, then download your planner for your records.</p>
+  </div>
+
+  <div class="app-mock" id="planner">
+    <div class="app-header">
+      <div>
+        <div class="brand">HerPurposefullLife</div>
+        <h2 id="periodLabel">Weekly Budget</h2>
+      </div>
+      <select class="currency-select" id="currencySelect">
+        <option value="RM">RM — MYR</option>
+        <option value="$">$ — USD</option>
+        <option value="S$">S$ — SGD</option>
+        <option value="£">£ — GBP</option>
+        <option value="€">€ — EUR</option>
+      </select>
+    </div>
+
+    <div class="toggle">
+      <button class="active" id="btnWeekly">Weekly</button>
+      <button id="btnMonthly">Monthly</button>
+    </div>
+
+    <div class="summary-cards">
+      <div class="s-card income">
+        <div class="label">Income</div>
+        <div class="amt" id="totalIncome">RM 0</div>
+      </div>
+      <div class="s-card expense">
+        <div class="label">Expenses</div>
+        <div class="amt" id="totalExpense">RM 0</div>
+      </div>
+      <div class="s-card savings">
+        <div class="label">Set Aside</div>
+        <div class="amt" id="totalSavings">RM 0</div>
+      </div>
+      <div class="s-card balance">
+        <div class="label">Balance</div>
+        <div class="amt" id="totalBalance">RM 0</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Income</h3>
+      <div id="incomeRows"></div>
+      <button class="add-btn" id="addIncome">+ Add income source</button>
+    </div>
+
+    <div class="section">
+      <h3>Expenses</h3>
+      <div id="expenseRows"></div>
+      <button class="add-btn" id="addExpense">+ Add expense</button>
+    </div>
+
+    <div class="section">
+      <h3>Savings &amp; Reserves</h3>
+      <div id="savingsRows"></div>
+      <button class="add-btn" id="addSavings">+ Add savings goal</button>
+    </div>
+
+    <div class="detail">
+      <h3>Breakdown</h3>
+      <div id="breakdownList"></div>
+    </div>
+
+    <button class="download-btn" id="downloadBtn">Download my planner ↓</button>
+    <button class="reset-btn" id="resetBtn">Clear all entries</button>
+  </div>
+
+  <p class="footer-note">Your entries are saved automatically on this device. Download a PDF anytime to keep a copy elsewhere.</p>
+</div>
+
+<script>
+  const STORAGE_KEY = 'hpl-budget-planner';
+
+  const defaultState = {
+    period: 'Weekly',
+    currency: 'RM',
+    income: [{ label: 'Client work', amount: 0 }],
+    expenses: [{ label: 'Rent', amount: 0 }],
+    savings: [
+      { label: 'Savings', amount: 0 },
+      { label: 'Emergency Fund', amount: 0 },
+      { label: 'Petty Cash', amount: 0 },
+    ],
+  };
+
+  function loadState(){
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if(saved) return JSON.parse(saved);
+    } catch(e){ /* storage unavailable, fall back to defaults */ }
+    return JSON.parse(JSON.stringify(defaultState));
+  }
+
+  function saveState(){
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch(e){ /* storage unavailable — entries just won't persist */ }
+  }
+
+  const state = loadState();
+
+  const incomeRows = document.getElementById('incomeRows');
+  const expenseRows = document.getElementById('expenseRows');
+  const savingsRows = document.getElementById('savingsRows');
+  const breakdownList = document.getElementById('breakdownList');
+  const periodLabel = document.getElementById('periodLabel');
+  const currencySelect = document.getElementById('currencySelect');
+
+  function fmt(n){
+    const num = isNaN(n) ? 0 : n;
+    return state.currency + ' ' + num.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:2});
+  }
+
+  function renderRows(list, container, type){
+    container.innerHTML = '';
+    list.forEach((item, i) => {
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `
+        <span class="dot ${type}"></span>
+        <input type="text" value="${item.label}" data-idx="${i}" data-field="label" data-type="${type}" placeholder="${type==='income' ? 'Source' : (type==='savings' ? 'Goal' : 'Category')}">
+        <input type="number" value="${item.amount || ''}" data-idx="${i}" data-field="amount" data-type="${type}" placeholder="0" min="0">
+        <button class="remove" data-idx="${i}" data-type="${type}">✕</button>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  function renderRowsAll(){
+    renderRows(state.income, incomeRows, 'income');
+    renderRows(state.expenses, expenseRows, 'expense');
+    renderRows(state.savings, savingsRows, 'savings');
+  }
+
+  function updateSummary(){
+    const totalIncome = state.income.reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
+    const totalExpense = state.expenses.reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
+    const totalSavings = state.savings.reduce((s,i)=>s+(parseFloat(i.amount)||0),0);
+    const balance = totalIncome - totalExpense - totalSavings;
+
+    document.getElementById('totalIncome').textContent = fmt(totalIncome);
+    document.getElementById('totalExpense').textContent = fmt(totalExpense);
+    document.getElementById('totalSavings').textContent = fmt(totalSavings);
+    document.getElementById('totalBalance').textContent = fmt(balance);
+    periodLabel.textContent = state.period + ' Budget';
+
+    breakdownList.innerHTML = '';
+    const items = [...state.income.map(i=>({...i,type:'income'})), ...state.expenses.map(i=>({...i,type:'expense'})), ...state.savings.map(i=>({...i,type:'savings'}))]
+      .filter(i => i.label && parseFloat(i.amount) > 0);
+
+    if(items.length === 0){
+      breakdownList.innerHTML = '<div class="empty-note">Add income or expenses above to see your breakdown</div>';
+    } else {
+      items.forEach(i => {
+        const row = document.createElement('div');
+        row.className = 'ledger-row';
+        row.innerHTML = `
+          <div class="cat"><span class="dot ${i.type}"></span> ${i.label}</div>
+          <div>${fmt(parseFloat(i.amount)||0)}</div>
+        `;
+        breakdownList.appendChild(row);
+      });
+    }
+
+    saveState();
+  }
+
+  function render(){
+    renderRowsAll();
+    updateSummary();
+  }
+
+  function getList(type){
+    if(type === 'income') return state.income;
+    if(type === 'savings') return state.savings;
+    return state.expenses;
+  }
+
+  document.body.addEventListener('input', (e) => {
+    const { idx, field, type } = e.target.dataset;
+    if(idx === undefined) return;
+    getList(type)[idx][field] = e.target.value;
+    updateSummary();
+  });
+
+  document.body.addEventListener('click', (e) => {
+    if(e.target.classList.contains('remove')){
+      const { idx, type } = e.target.dataset;
+      getList(type).splice(idx, 1);
+      render();
+    }
+  });
+
+  document.getElementById('addIncome').addEventListener('click', () => {
+    state.income.push({ label: '', amount: 0 });
+    render();
+  });
+  document.getElementById('addExpense').addEventListener('click', () => {
+    state.expenses.push({ label: '', amount: 0 });
+    render();
+  });
+  document.getElementById('addSavings').addEventListener('click', () => {
+    state.savings.push({ label: '', amount: 0 });
+    render();
+  });
+
+  document.getElementById('btnWeekly').addEventListener('click', (e) => {
+    state.period = 'Weekly';
+    e.target.classList.add('active');
+    document.getElementById('btnMonthly').classList.remove('active');
+    render();
+  });
+  document.getElementById('btnMonthly').addEventListener('click', (e) => {
+    state.period = 'Monthly';
+    e.target.classList.add('active');
+    document.getElementById('btnWeekly').classList.remove('active');
+    render();
+  });
+
+  currencySelect.addEventListener('change', (e) => {
+    state.currency = e.target.value;
+    render();
+  });
+
+  document.getElementById('downloadBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('downloadBtn');
+    btn.disabled = true;
+    btn.textContent = 'Preparing your PDF…';
+    const target = document.getElementById('planner');
+    try {
+      const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('p', 'pt', [canvas.width / 2, canvas.height / 2]);
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.save(`Busy-Mom-Budget-Planner-${state.period}.pdf`);
+    } catch(err){
+      alert('Could not generate PDF. Please try again.');
+    }
+    btn.disabled = false;
+    btn.textContent = 'Download my planner ↓';
+  });
+
+  render();
+
+  // Sync UI controls (toggle, currency) to any restored state
+  currencySelect.value = state.currency;
+  if(state.period === 'Monthly'){
+    document.getElementById('btnMonthly').classList.add('active');
+    document.getElementById('btnWeekly').classList.remove('active');
+  }
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if(confirm('Clear all entries and start fresh?')){
+      Object.assign(state, JSON.parse(JSON.stringify(defaultState)));
+      render();
+      currencySelect.value = state.currency;
+      document.getElementById('btnWeekly').classList.add('active');
+      document.getElementById('btnMonthly').classList.remove('active');
+    }
+  });
+</script>
+</body>
+</html>
